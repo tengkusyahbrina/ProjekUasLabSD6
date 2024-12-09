@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include <sstream>
 
 using namespace std;
@@ -18,6 +19,9 @@ string formatRupiah(double harga) {
     ss << "Rp " << fixed << setprecision(0) << harga;
     return ss.str();
 }
+
+// Menggunakan Hash Map untuk menyimpan produk berdasarkan kategori
+unordered_map<string, vector<Produk>> produkPerKategori;
 
 vector<Produk> daftarProduk = {
     {1, "Smartphone Samsung Galaxy S23", "Elektronik", 12000000},
@@ -39,7 +43,7 @@ vector<Produk> daftarProduk = {
     {17, "Kopi Arabica 100g", "Konsumsi", 50000},
     {18, "Mie Instan", "Konsumsi", 5000},
     {19, "Susu UHT Indomilk 1 Liter", "Konsumsi", 18000},
-    {20, "Teh Kotak Sosro 500ml", "Konsumsi", 7500000}
+    {20, "Teh Kotak Sosro 500ml", "Konsumsi", 7500}
 };
 
 vector<int> keranjangBelanja;
@@ -65,16 +69,6 @@ void sortirHarga(vector<Produk>& produk, bool ascending) {
     sort(produk.begin(), produk.end(), [ascending](const Produk& a, const Produk& b) {
         return ascending ? a.harga < b.harga : a.harga > b.harga;
     });
-}
-
-vector<Produk> filterKategori(const string& kategori) {
-    vector<Produk> hasil;
-    for (const auto& p : daftarProduk) {
-        if (p.kategori == kategori) {
-            hasil.push_back(p);
-        }
-    }
-    return hasil;
 }
 
 void tambahKeKeranjang(int idProduk) {
@@ -106,6 +100,22 @@ void tampilkanKeranjang() {
         }
     }
     cout << "+-----+------------------------------------------+-------------------+----------------+\n";
+}
+
+void inisialisasiHashMap() {
+    for (const auto& produk : daftarProduk) {
+        produkPerKategori[produk.kategori].push_back(produk);
+    }
+}
+
+void tampilkanProdukBerdasarkanKategori(const string& kategori) {
+    auto it = produkPerKategori.find(kategori);
+    if (it != produkPerKategori.end()) {
+        cout << "\nDaftar Produk Kategori \"" << kategori << "\":\n";
+        tampilkanProduk(it->second);
+    } else {
+        cout << "\nTidak ada produk dalam kategori \"" << kategori << "\".\n";
+    }
 }
 
 void menu() {
@@ -142,13 +152,7 @@ void menu() {
             string kategori;
             cout << "\nMasukkan kategori (Elektronik, Fitness, Kecantikan, Konsumsi, dll.): ";
             cin >> kategori;
-            vector<Produk> hasil = filterKategori(kategori);
-            if (hasil.empty()) {
-                cout << "\nTidak ada produk dalam kategori \"" << kategori << "\".\n";
-            } else {
-                cout << "\nDaftar Produk Kategori \"" << kategori << "\":\n";
-                tampilkanProduk(hasil);
-            }
+            tampilkanProdukBerdasarkanKategori(kategori);
             break;
         }
         case 4: {
@@ -171,6 +175,7 @@ void menu() {
 }
 
 int main() {
+    inisialisasiHashMap();
     menu();
     return 0;
 }

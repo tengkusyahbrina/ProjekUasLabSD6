@@ -42,6 +42,7 @@ int jumlahRiwayat = 0;
 
 
 unordered_map<int, Produk> produkMap;
+unordered_map<string, vector<Produk>> produkPerKategori;
 
 
 int graph[V][V] = {
@@ -110,10 +111,6 @@ vector<Produk> daftarProduk = {
     {20, "Teh Kotak Sosro 500ml", "Konsumsi", 7500}
 };
 
-
-// Keranjang belanja
-vector<int> KeranjangBelanja;
-
 int keranjangBelanja[21] = {0};
 
 // --- Product Display Functions ---
@@ -141,24 +138,30 @@ void sortirHarga(vector<Produk>& produk, bool ascending) {
     });
 }
 
-vector<Produk> filterKategori(const string& kategori) {
-    vector<Produk> hasil;
-    for (const auto& p : daftarProduk) {
-        if (p.kategori == kategori) {
-            hasil.push_back(p);
-        }
+void inisialisasiHashMap() {
+    for (const auto& produk : daftarProduk) {
+        produkPerKategori[produk.kategori].push_back(produk);
     }
-    return hasil;
+}
+
+void tampilkanProdukBerdasarkanKategori(const string& kategori) {
+    auto it = produkPerKategori.find(kategori);
+    if (it != produkPerKategori.end()) {
+        cout << "\nDaftar Produk Kategori \"" << kategori << "\":\n";
+        tampilkanProduk(it->second);
+    } else {
+        cout << "\nTidak ada produk dalam kategori \"" << kategori << "\".\n";
+    }
 }
 
 // --- Shopping Cart Functions ---
 void tambahKeKeranjang(int idProduk) {
-    if (produkMap.find(idProduk) != produkMap.end()) {
-        KeranjangBelanja.push_back(idProduk);
-        cout << "\nProduk \"" << produkMap[idProduk].nama << "\" berhasil ditambahkan ke keranjang.\n";
-    } else {
+    if (idProduk < 1 || idProduk > 20) {
         cout << "\nProduk dengan ID " << idProduk << " tidak ditemukan.\n";
+        return;
     }
+    keranjangBelanja[idProduk]++;
+    cout << "\nProduk \"" << produkMap[idProduk].nama << "\" berhasil ditambahkan ke keranjang.\n";
 }
 
 void tampilkanKeranjang() {
@@ -437,16 +440,10 @@ void menu() {
             }
             case 3: {
                 string kategori;
-                cout << "\nMasukkan kategori (Elektronik, Fitness, Kecantikan, Konsumsi, dll.): ";
-                cin >> kategori;
-                vector<Produk> hasil = filterKategori(kategori);
-                if (hasil.empty()) {
-                    cout << "\nTidak ada produk dalam kategori \"" << kategori << "\".\n";
-                } else {
-                    cout << "\nDaftar Produk Kategori \"" << kategori << "\":\n";
-                    tampilkanProduk(hasil);
-                }
-                break;
+            cout << "\nMasukkan kategori (Elektronik, Fitness, Kecantikan, Konsumsi): ";
+            cin >> kategori;
+            tampilkanProdukBerdasarkanKategori(kategori);
+            break;
             }
             case 4: {
             int idProduk;
@@ -497,6 +494,7 @@ int main() {
     for (const auto& p : daftarProduk) {
         produkMap[p.id] = p;
     }
+    inisialisasiHashMap();
     menu();
     return 0;
 }
