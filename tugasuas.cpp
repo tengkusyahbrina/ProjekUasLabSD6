@@ -11,7 +11,6 @@
 
 using namespace std;
 
-// --- Data Structures ---
 struct Produk {
     int id;
     string nama;
@@ -31,19 +30,16 @@ struct RiwayatPembayaran {
     double totalBayar;
     string tanggal;
     string metodePembayaran;
-    vector<pair<int, pair<int, double>>> detail; //idProduk, {jumlah, subtotal}
+    vector<DetailTransaksi> detail; 
 };
 
-// --- Constants ---
 const int MAX_RIWAYAT = 100;
 const int MAX_PRODUK = 20;
 RiwayatPembayaran riwayat[MAX_RIWAYAT];
 int jumlahRiwayat = 0;
 
-
 unordered_map<int, Produk> produkMap;
 unordered_map<string, vector<Produk>> produkPerKategori;
-
 
 int graph[V][V] = {
         {0, 0, 7, 4, 0, 0, 4, 0, 5, 0}, 
@@ -87,7 +83,6 @@ int getValidatedInput(int min, int max) {
     return input;
 }
 
-// --- Product Data ---
 vector<Produk> daftarProduk = {
     {1, "Smartphone Samsung Galaxy S23", "Elektronik", 12000000},
     {2, "Laptop ASUS ROG Zephyrus G14", "Elektronik", 25000000},
@@ -113,7 +108,6 @@ vector<Produk> daftarProduk = {
 
 int keranjangBelanja[21] = {0};
 
-// --- Product Display Functions ---
 void tampilkanHeader() {
     cout << "+-----+------------------------------------------+-------------------+----------------+\n";
     cout << "| ID  |                Nama Produk               |     Kategori      |     Harga      |\n";
@@ -131,7 +125,6 @@ void tampilkanProduk(const vector<Produk>& produk) {
     cout << "+-----+------------------------------------------+-------------------+----------------+\n";
 }
 
-// --- Product Sorting and Filtering ---
 void sortirHarga(vector<Produk>& produk, bool ascending) { 
     sort(produk.begin(), produk.end(), [ascending](const Produk& a, const Produk& b) {
         return ascending ? a.harga < b.harga : a.harga > b.harga;
@@ -154,7 +147,6 @@ void tampilkanProdukBerdasarkanKategori(const string& kategori) {
     }
 }
 
-// --- Shopping Cart Functions ---
 void tambahKeKeranjang(int idProduk) {
     if (idProduk < 1 || idProduk > 20) {
         cout << "\nProduk dengan ID " << idProduk << " tidak ditemukan.\n";
@@ -336,7 +328,7 @@ void pembayaran() {
         for (int id = 1; id <= MAX_PRODUK; ++id) {
             if (keranjangBelanja[id] > 0) {
                 double subtotal = keranjangBelanja[id] * produkMap[id].harga;
-                riwayat[jumlahRiwayat].detail.push_back({id, {keranjangBelanja[id], subtotal}});
+                riwayat[jumlahRiwayat].detail.push_back({id, keranjangBelanja[id], produkMap[id].harga});
             }
         }
         jumlahRiwayat++;
@@ -384,11 +376,17 @@ void tampilkanDetailTransaksi(int noTransaksi) {
     cout << "|  ID |                Nama Produk               | Jumlah |     Subtotal   |\n";
     cout << "+-----+------------------------------------------+------------+----------------+\n";
 
+    unordered_map<int, Produk> transactionProductMap;
     for (const auto& dt : riwayat[noTransaksi - 1].detail) {
-        cout << "| " << setw(3) << dt.first << " | "
-             << left << setw(40) << produkMap[dt.first].nama << " | "
-             << setw(10) << dt.second.first << " | "
-             << right << setw(14) << formatRupiah(dt.second.second) << " |\n";
+        transactionProductMap[dt.idProduk] = produkMap[dt.idProduk];
+    }
+
+    for (const auto& dt : riwayat[noTransaksi - 1].detail) {
+        double subtotal = dt.jumlah * dt.hargaSatuan;
+        cout << "| " << setw(3) << dt.idProduk << " | "
+             << left << setw(40) << transactionProductMap[dt.idProduk].nama << " | "
+             << setw(10) << dt.jumlah << " | "
+             << right << setw(14) << formatRupiah(subtotal) << " |\n";
     }
 
     cout << "+-----+------------------------------------------+------------+----------------+\n";
@@ -398,7 +396,6 @@ void tampilkanDetailTransaksi(int noTransaksi) {
     cout << "Tekan Enter untuk kembali ke menu utama..." << endl;
     cin.get();
     cin.get();
-
 }
 
 void menu() {
